@@ -3,8 +3,97 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using System;
-using UnityEngine.Rendering.Universal;
+using TMPro;
 
+
+
+//im making my own exception just so i dont have to find a specific exception that matches a problem
+public class LimitExceededException : Exception{
+     public LimitExceededException(string message) : base(message) { }
+}
+public class NegativeNumberException : Exception {
+    public NegativeNumberException(string message) : base(message) {}
+}
+//just to make things easier for me (ironic how normal integers are already limited)
+public class LimitedInteger { 
+    private int p_min;
+    public int Min { get { return p_min; } set { if (p_min > value) { p_min = value; } } }
+
+    private int p_max;
+    public int Max { get { return p_max; } set { if (p_max < value) { p_max = value; } } }
+
+    private int _value;
+    public int Value {
+        get { 
+            return _value; 
+        }
+        set {
+            if (value > Max) {
+                throw new LimitExceededException("Cannot set Value property greater than the maximum integer");
+            }
+            else if (value < Min) {
+                throw new LimitExceededException("Cannot set Value property less than the minimum integer");
+            }
+
+
+        }
+    }
+
+
+    // totally didn't copy and paste this online ;)
+    public static implicit operator int(LimitedInteger x) { return x.Value; }
+    public static implicit operator LimitedInteger(int x) => new LimitedInteger(int.MinValue, int.MaxValue, x);
+ 
+    public static LimitedInteger operator+ (LimitedInteger x, LimitedInteger y) {
+        // adding 2 limited integers extends the maximum value of the sum.
+        return new LimitedInteger(x.Min, x.Value + y.Value, x.Value + y.Value);
+    }
+    public static LimitedInteger operator* (LimitedInteger x, LimitedInteger y) {
+        // multiplying 2 limited integers extends the maximum value of the product.
+        return new LimitedInteger(x.Min, x.Value * y.Value, x.Value * y.Value);
+    }
+    public static LimitedInteger operator- (LimitedInteger x, LimitedInteger y) {
+        // subtracting 2 limited integers extends the minimum value of the difference.
+        int biggestMaxNum = 0;
+        if (x.Max > y.Max) { biggestMaxNum = x.Max;}
+        else if (x.Max < y.Max) { biggestMaxNum = y.Max;}
+        else if (x.Max == y.Max) { biggestMaxNum = x.Max;}
+
+        int biggestMinNum = 0;
+        if (x.Min < y.Min) { biggestMinNum = x.Min;}
+        else if (y.Min < x.Min) { biggestMinNum = y.Min;}
+        else if (x.Min == y.Min) { biggestMinNum = x.Min;}
+
+        return new LimitedInteger(biggestMinNum, biggestMaxNum, x.Value - y.Value);
+    }
+        public static LimitedInteger operator/ (LimitedInteger x, LimitedInteger y) {
+        // dividing 2 limited integers extends the minimum value of the quotient.
+        int biggestMaxNum = 0;
+        if (x.Max > y.Max) { biggestMaxNum = x.Max;}
+        else if (x.Max < y.Max) { biggestMaxNum = y.Max;}
+        else if (x.Max == y.Max) { biggestMaxNum = x.Max;}
+
+        int biggestMinNum = 0;
+        if (x.Min < y.Min) { biggestMinNum = x.Min;}
+        else if (y.Min < x.Min) { biggestMinNum = y.Min;}
+        else if (x.Min == y.Min) { biggestMinNum = x.Min;}
+
+        return new LimitedInteger(biggestMinNum, biggestMaxNum, x.Value / y.Value);
+
+
+    }
+    public LimitedInteger(int min, int max) {
+        this.Min = min;
+        this.Max = max;
+        
+    }
+    public LimitedInteger(int min, int max, int value) {
+        this.Min = min;
+        this.p_max = max;
+        this._value = value;
+        this.Value = value;
+    }
+}
 public class GunController : MonoBehaviour
 {
     [Header("OBJECTS/COMPONENTS")]
@@ -16,11 +105,18 @@ public class GunController : MonoBehaviour
     public Player player;
     public GameObject SpawnedBullet { get; private set; }
     [Header("VARIABLES")]
+    public TextMeshProUGUI ammoText;
     [Range(1, 100)]
     public float gunShotForce;
     [Range(1, 10)]
+    public float reloadingTime;
+    [Range(1, 10)]
     public float gunAndBulletDistanceThreshold = 3f;
-    public float shootCooldown = 0.75f;
+    public float shootCooldown = 3f;
+
+    public LimitedInteger Ammo;
+    public int  maxAmmo;
+
     private float shootTimer;
 
     public float Angle 
@@ -32,10 +128,60 @@ public class GunController : MonoBehaviour
     }
     public bool canShoot = true;
     public bool justShot { get; private set; }
+    public bool isReloading { get; private set; }
 
+    private void Start() {
+        Ammo = new LimitedInteger(0, maxAmmo, maxAmmo);
+        
+    }
+    public IEnumerator Reload() {
+        if (!isReloading) {
+            isReloading = true;
+            //jic (just in case)
+            canShoot = false;
+            yield return new WaitForSeconds(reloadingTime);
+            Ammo = maxAmmo;
+            isReloading = false;
+            canShoot = true;
+        }
+        else {
+            Debug.LogWarning("Reload function called when isReloading is already set to true");
+        }
+    }
+        public IEnumerator Reload(bool maxAmmoDecreases) {
+        if (!isReloading) {
+            if (maxAmmoDecreases) {
+                maxAmmo -= 2;
+                Ammo.Max = maxAmmo;
+            }
+            isReloading = true;
+            //jic (just in case)
+            canShoot = false;
+            yield return new WaitForSeconds(reloadingTime);
+            Ammo = maxAmmo;
+            isReloading = false;
+            canShoot = true;
+            
+        }
+        else {
+            Debug.LogWarning("Reload function called when isReloading is already set to true");
+        }
+    }
+    public IEnumerator Reload(float time) {
+        if (!isReloading) {
+            isReloading = true;
+            //jic (just in case)
+            canShoot = false;
+            yield return new WaitForSeconds(time);
+            isReloading = false;
+            Ammo = maxAmmo;
+        }
+        else {
+            Debug.LogWarning("Reload function called when isReloading is already set to true");
+        }
+    }
     private void Update() {
         if (justShot) {
-            shootTimer = shootCooldown;
             shootTimer -= Time.deltaTime;
             canShoot = false;
             print("Can't shoot");
@@ -44,6 +190,10 @@ public class GunController : MonoBehaviour
             canShoot = true;
             print("Can shoot again");
         }
+        if (Ammo == 0) { canShoot = false; print("no ammo"); }
+        ammoText.text = $"{Ammo.Value}/{maxAmmo}";
+        print($"Shoot timer: {shootTimer}");
+        print($"Can shoot: {canShoot}");
     }
     // FixedUpdate is Update++
     void FixedUpdate()
@@ -74,11 +224,14 @@ public class GunController : MonoBehaviour
         // print($"The gun is at {player.gun.transform.position}");
         float distance = ((Vector3)hitData.point - player.gun.transform.position).magnitude;
         // print($"Distance {distance}");
+
         //if the distance between the gun and the ground (or object) is big enough
-        if(hitObject && distance > 2.75f && canShoot){
+        if(hitObject && distance > 2.75f && canShoot && Ammo != 0){
             print("pew pew");
             shootTimer = shootCooldown;
             justShot = true;
+            Ammo--;
+            print(Ammo);
             
             GameObject flare = Instantiate(gunshotFX, gunFirePoint.transform.position, Quaternion.Euler(transform.position.x, transform.position.y, Angle));
             /// attempted to get the light object and pseudoparented it to the gun fire point (didn't work and it's clunky)
@@ -105,6 +258,9 @@ public class GunController : MonoBehaviour
 
             bulletPhysics.velocity += (Vector2)(-gunFirePoint.transform.right) * gunShotForce;
             justShot = false;
+        }
+        else if (Ammo == 0) {
+            StartCoroutine(Reload());
         }
         else
             return;
