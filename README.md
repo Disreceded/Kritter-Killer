@@ -1,9 +1,9 @@
 # Kritter-Killer
 
-(sorry if this is difficult to understand, i just suck at choosing what words to use)
 
-A silly game based upon a generic and redundant idea.
+# *A silly game based upon a generic and redundant idea.*
 
+*(sorry if this is difficult to understand, i just suck at choosing what words to use)*
 Don't just distribute a modified (or the same and original) version of this game that isn't free, please.
 
 I soon plan to add multiplayer gamemode to this game, and if I figure out how to use github, I'll make it so that you can't modify the multiplayer part
