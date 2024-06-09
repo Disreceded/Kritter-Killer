@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="ShotFlare.png">
+	<!-- Created with Adobe Animate version 21.0.6.41649 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="shot_flare0000" x="191" y="307" width="186" height="252" frameX="-12" frameY="-28" frameWidth="205" frameHeight="307"/>
+	<SubTexture name="shot_flare0001" x="205" y="0" width="164" height="250" frameX="-24" frameY="-35" frameWidth="205" frameHeight="307"/>
+	<SubTexture name="shot_flare0002" x="182" y="598" width="175" height="276" frameX="-15" frameY="-24" frameWidth="205" frameHeight="307"/>
+	<SubTexture name="shot_flare0003" x="0" y="598" width="182" height="276" frameX="-9" frameY="-17" frameWidth="205" frameHeight="307"/>
+	<SubTexture name="shot_flare0004" x="0" y="307" width="191" height="291" frameX="-7" frameY="-8" frameWidth="205" frameHeight="307"/>
+	<SubTexture name="shot_flare0005" x="0" y="0" width="205" height="307"/>
+	<SubTexture name="shot_flare0006" x="0" y="0" width="0" height="0" frameX="-55" frameY="-163" frameWidth="205" frameHeight="307"/>
+</TextureAtlas>
