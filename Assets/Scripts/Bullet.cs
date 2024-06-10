@@ -63,7 +63,7 @@ public class Bullet : MonoBehaviour
 
         if (autoDestroy) { Destroy(gameObject); }
 
-        Vector2 reflectionDirection = Vector2.Reflect(transform.position, collision.GetContact(0).normal.normalized).normalized;
+        Vector2 reflectionDirection = Vector2.Reflect(transform.position, collision.GetContact(0).normal).normalized;
         Rigidbody2D bulletPhysics = GetComponent<Rigidbody2D>();
 
         bulletPhysics.velocity += reflectionDirection * 20;

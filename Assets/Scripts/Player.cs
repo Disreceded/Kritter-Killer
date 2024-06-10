@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 
 public class Player : MonoBehaviour
@@ -10,7 +10,21 @@ public class Player : MonoBehaviour
         private PlayerControls controls;
         [Header("OBJECT/COMPONENTS")]
         public GameObject gun;
+        public Slider healthBar;
+        public Image healthBarFill;
+        [Header("GAMEPLAY")]
+        public int minHealth;
+        public int maxHealth;
 
+        //the time between each regen (regeneration)
+        public float minRegenTime;
+        public float maxRegenTime;
+        public bool JustRegen { get; private set; }
+        public int minimumRegen;
+        public int maximumRegen;
+        public LimitedInteger Health { get; set;}
+
+        public Gradient healthGradient;
         [Header("INPUT/PHYSICS")]
         public float speed;
         public float jumpForce = 75f;
@@ -66,9 +80,9 @@ public class Player : MonoBehaviour
                 if (bullet == null) { return;}
                 bullet.BulletHit += (sender, args) =>
                 {
-                    if (args.HitObject.name.ToLower().Contains("kritter")) {
-                        //print("Killed a kritter");
-                        Destroy(args.HitObject);
+                    if (args.HitObject.GetComponent<Kritter>() != null) {
+                        Kritter kritter = args.HitObject.GetComponent<Kritter>();
+                        kritter.Die();
                     }
                 };
             };
@@ -121,19 +135,38 @@ public class Player : MonoBehaviour
             // To let us know the player has loaded
             print(gameObject.name + " has loaded");
             if (GunController == null) { gun.AddComponent<GunController>(); }
-
+            
+            Health = new LimitedInteger(minHealth, maxHealth, maxHealth);
             
         }
 
         // Update is called once per frame
         void Update()
         {
-            #region Variable Setting
+
             input = GetInput();
             multipliedInput = GetInput(speed);
-            #endregion
-        }
+            healthBar.value = Health;
+            healthBar.minValue = minHealth;
+            healthBar.maxValue = maxHealth;
+            healthBarFill.color = healthGradient.Evaluate(healthBar.normalizedValue);
+            StartCoroutine(Regenerate());
 
+            
+        }
+        public void Damage(int damage) {
+            int newHealth = Health - damage;
+            Health = newHealth;
+        }
+        public IEnumerator Regenerate() {
+            if (Health <= 100 && !JustRegen) {
+                JustRegen = true;
+                int regenAmount = Random.Range(minimumRegen, maximumRegen);
+                Health += regenAmount;
+                yield return new WaitForSeconds(Random.Range(minRegenTime, maxRegenTime));
+                JustRegen = false;
+            }
+        }
         // FixedUpdate is Update++
         private void FixedUpdate()
         {
