@@ -130,9 +130,20 @@ public class GunController : MonoBehaviour
     public bool justShot { get; private set; }
     public bool isReloading { get; private set; }
 
+    private float time;
+
     private void Start() {
         Ammo = new LimitedInteger(0, maxAmmo, maxAmmo);
         
+    }
+    public void ReloadFunc() {
+        StartCoroutine(Reload());
+    }
+    public void ReloadFunc(bool maxAmmoDecreases) {
+        StartCoroutine(Reload(maxAmmoDecreases));
+    }
+    public void ReloadFunc(float time) {
+        StartCoroutine(Reload(time));
     }
     public IEnumerator Reload() {
         if (!isReloading) {
@@ -148,11 +159,20 @@ public class GunController : MonoBehaviour
             Debug.LogWarning("Reload function called when isReloading is already set to true");
         }
     }
-        public IEnumerator Reload(bool maxAmmoDecreases) {
+    public IEnumerator Reload(bool maxAmmoDecreases) {
         if (!isReloading) {
             if (maxAmmoDecreases) {
                 maxAmmo -= 2;
                 Ammo.Max = maxAmmo;
+                if (Ammo > 0) {
+                    isReloading = true;
+                    //jic (just in case)
+                    canShoot = false;
+                    yield return new WaitForSeconds(time);
+                    isReloading = false;
+                    maxAmmo--;
+                    Ammo = maxAmmo;
+                }
             }
             isReloading = true;
             //jic (just in case)
@@ -169,6 +189,14 @@ public class GunController : MonoBehaviour
     }
     public IEnumerator Reload(float time) {
         if (!isReloading) {
+            if (Ammo > 0) {
+                isReloading = true;
+                //jic (just in case)
+                canShoot = false;
+                yield return new WaitForSeconds(time);
+                isReloading = false;
+                Ammo = maxAmmo;
+            }
             isReloading = true;
             //jic (just in case)
             canShoot = false;
@@ -181,18 +209,17 @@ public class GunController : MonoBehaviour
         }
     }
     private void Update() {
-        if (justShot) {
-            shootTimer -= Time.deltaTime;
-            canShoot = false;
-            print("Can't shoot");
-        }
-        if (shootTimer <= 0) {
-            canShoot = true;
-            print("Can shoot again");
-        }
-        if (Ammo == 0) { canShoot = false; print("no ammo"); }
+        // if (justShot) {
+        //     shootTimer -= Time.deltaTime;
+        //     canShoot = false;
+        //     print("Can't shoot");
+        // }
+        // if (shootTimer <= 0) {
+        //     canShoot = true;
+        //     print("Can shoot again");
+        // }
+        // if (Ammo == 0) { canShoot = false; print("no ammo"); }
         ammoText.text = $"{Ammo.Value}/{maxAmmo}";
-        print($"Shoot timer: {shootTimer}");
         print($"Can shoot: {canShoot}");
     }
     // FixedUpdate is Update++
@@ -226,9 +253,10 @@ public class GunController : MonoBehaviour
         // print($"Distance {distance}");
 
         //if the distance between the gun and the ground (or object) is big enough
-        if(hitObject && distance > 2.75f && canShoot && Ammo != 0){
+        if(hitObject && distance > 2.75f && canShoot && Ammo != 0 && Time.time > time + shootCooldown){
+    
             print("pew pew");
-            shootTimer = shootCooldown;
+            time = Time.time;
             justShot = true;
             Ammo--;
             print(Ammo);

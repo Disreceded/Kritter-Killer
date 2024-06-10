@@ -10,6 +10,8 @@ public enum PseudoparentType {
     PositionRotation,
     PositionScale,
 }
+// this class provides a way to pseudoparent (basically set some transform properties to the parent properties without the object ACTUALLY being a child of the parent object (hope that made sense)) something to something else
+// this class is unused as of june 9th 2024.
 public class Pseudoparent : MonoBehaviour
 {
     public GameObject parent;
